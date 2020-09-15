@@ -1,0 +1,165 @@
+//table1的行数---317776
+SELECT COUNT(*) AS tab FROM table1
+SELECT COUNT(*) AS tab FROM `人车关系_6-8月`
+
+//有几对重复的值---1791
+SELECT COUNT(*) - COUNT(DISTINCT `会员号`)
+AS 'duplicate names'
+FROM table1
+SELECT COUNT(*) - COUNT(DISTINCT `会员编号`)
+AS 'duplicate names'
+FROM `人车关系_6-8月`
+
+//查看重复值并计算重复个数
+SELECT COUNT(*),`会员号`
+FROM mo
+GROUP BY `会员号`
+HAVING COUNT(*) >1
+
+SELECT COUNT(*),`会员编号`
+FROM `人车关系_6-8月`
+GROUP BY `会员编号`
+HAVING COUNT(*) >1
+
+//索引？
+ALTER TABLE table1
+ADD INDEX idx_id (`会员号`)
+ALTER TABLE table1
+DROP INDEX idx_id
+
+ALTER TABLE `人车关系_6-8月`
+ADD INDEX idx_ids (`会员编号`)
+ALTER TABLE `人车关系_6-8月`
+DROP INDEX idx_ids
+
+--------------------------------
+//会员信息表table1去重，group by+order by 生成新表ms1，行数315985 **16秒**
+CREATE TABLE ms1 (SELECT * FROM table1 GROUP BY `会员号` ORDER BY `厂商积分余额` DESC)
+SELECT COUNT(*) AS tab FROM ms1
+
+//设置ms1的主键为会员号
+ALTER TABLE ms1
+ADD PRIMARY KEY (`会员号`)
+
+//合并两表为 会员车主信息 ，行数336338 **20秒**
+CREATE TABLE 会员车主信息
+(SELECT * 
+FROM ms1 AS a
+LEFT JOIN `人车关系_6-8月`AS b
+ON a.`会员号`=b.`会员编号`)
+
+SELECT COUNT(*) AS tab FROM 会员车主信息
+
+-------------------------------
+//添加一个唯一的id
+ALTER TABLE mo
+ADD COLUMN member_id INT NOT NULL AUTO_INCREMENT FIRST,
+ADD PRIMARY KEY(member_id)
+
+-------------------------------
+//6月"BMW"激活会员对应车辆数
+SELECT COUNT(车系) FROM mo 
+WHERE (会员类别 <> "MINI")
+AND 车系 IS NOT NULL
+AND `BMW激活日期` LIKE "%6/2020"
+
+-------------------------------
+//新能源激活情况
+SELECT
+`车系`，
+COUNT(`车系`)
+FROM mo
+WHERE `车系` LIKE "BMW%"
+
+SELECT
+`车系`，
+COUNT(`车系`)
+FROM mo
+WHERE `车系` LIKE "BMW"
+
+SELECT (*) f
+
+-------------------------------
+//激活会员身份比例 **检查**
+SELECT
+`身份`, 
+COUNT(*) AS number,
+CONCAT(
+(COUNT(*)*100/(SELECT COUNT(*) FROM mo)),"%"
+)
+AS percentage
+FROM mo GROUP BY `身份`
+
+-------------------------------
+//车辆车系分布
+//每个车系包含的数量
+select 车系,count(*) from mo group by 车系;
+//总数
+select count(*) from mo where 车系 is not null
+//车系-车系对应数量-总数-百分比
+select
+车系,
+count(*) AS number,
+(select count(*) from mo where 车系 is not null) AS total,
+count(*)/(select count(*) from mo where 车系 is not null) AS percentage
+from mo where 车系 is not null group by 车系
+
+//mini汇总的方法
+SELECT
+	c.车系,
+	c.cc,
+	( SELECT count(*) FROM mo WHERE 车系 IS NOT NULL ),
+	c.cc /(SELECT count(*) FROM mo WHERE 车系 IS NOT NULL) 
+FROM
+( SELECT
+	车系,
+	count(*) AS cc
+	FROM mo WHERE 车系 NOT LIKE 'MINI%' AND 车系 IS NOT NULL 
+	GROUP BY
+		车系 
+	UNION SELECT
+		车系,
+		count(*) AS cc 
+	FROM mo WHERE 车系 LIKE 'MINI%' 
+) c
+
+-------------------------------
+//性别比例
+//激活会员的性别比例??
+SELECT `性别`,
+COUNT(*) AS number,
+COUNT(*)/(SELECT COUNT(*) FROM mo WHERE `性别` IS NOT NULL) AS percentage
+FROM mo
+GROUP BY `性别`
+
+//车主就是WHERE 会员编号 IS NOT NULL
+SELECT `性别`,
+COUNT(*) AS number,
+COUNT(*)/(SELECT COUNT(*) FROM mo WHERE `性别` IS NOT NULL) AS percentage
+FROM mo
+WHERE `会员编号` IS NOT NULL
+GROUP BY `性别`
+-------------------------------
+//推荐购活动推荐人
+SELECT `车型`,
+COUNT(*) AS number
+FROM mo
+WHERE `车系` LIKE 'BMW%' AND `车系` IS NOT NULL
+GROUP BY `车型`
+ORDER BY number DESC
+LIMIT 10
+-------------------------------
+//JOY币账户分布情况
+//0-5、6-10、11-15、15-20、21-100、else
+SELECT
+CASE
+WHEN `厂商积分余额`<=5 AND `厂商积分余额`>=0 THEN '0-5'
+ELSE '其他'
+END '积分分布',
+COUNT(`厂商积分余额`) AS NUM
+FROM mo
+GROUP BY
+CASE
+WHEN `厂商积分余额`<=5 AND `厂商积分余额`>=0 THEN '0-5'
+ELSE '其他'
+END 
