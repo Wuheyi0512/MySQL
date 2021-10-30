@@ -125,7 +125,7 @@ FROM
 
 -------------------------------
 //性别比例
-//激活会员的性别比例??
+//激活会员的性别比例
 SELECT `性别`,
 COUNT(*) AS number,
 COUNT(*)/(SELECT COUNT(*) FROM mo WHERE `性别` IS NOT NULL) AS percentage
