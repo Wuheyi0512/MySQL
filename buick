@@ -1,0 +1,753 @@
+-- 一年基盘
+SELECT
+a1.dealer_code
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+	GROUP BY dealer_code,dt
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+	GROUP BY dealer_code,dt
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+	GROUP BY dealer_code,dt
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+	GROUP BY dealer_code,dt
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+	GROUP BY dealer_code,dt
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+;
+----------------------------------------------------------------
+-- 专属客户
+SELECT
+a1.dealer_code
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+    WHERE team=1
+	GROUP BY dealer_code,dt
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+;
+----------------------------------------------------------------
+-- 一年基盘大小车
+SELECT
+a1.dealer_code
+,a1.big_series
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+	GROUP BY dealer_code,dt,big_series
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+	GROUP BY dealer_code,dt,big_series
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.big_series = t1.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+	GROUP BY dealer_code,dt,big_series
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.big_series = t2.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,big_series
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,big_series
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.big_series = a2.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+	GROUP BY dealer_code,dt,big_series
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.big_series = t3.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+	GROUP BY dealer_code,dt,big_series
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.big_series = t4.big_series
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.big_series ASC
+;
+----------------------------------------------------------------
+-- 专属客户大小车
+SELECT
+a1.dealer_code
+,a1.big_series
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+    WHERE team=1
+	GROUP BY dealer_code,dt,big_series
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,big_series
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.big_series = t1.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,big_series
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.big_series = t2.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,big_series
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,big_series
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.big_series = a2.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,big_series
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.big_series = t3.big_series
+LEFT JOIN
+(
+	SELECT dealer_code
+	,big_series
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,big_series
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.big_series = t4.big_series
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.big_series ASC
+;
+----------------------------------------------------------------
+-- 一年基盘人群分类
+SELECT
+a1.dealer_code
+,a1.customer_type
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+	GROUP BY dealer_code,dt,customer_type
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+	GROUP BY dealer_code,dt,customer_type
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.customer_type = t1.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+	GROUP BY dealer_code,dt,customer_type
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.customer_type = t2.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,customer_type
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,customer_type
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.customer_type = a2.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+	GROUP BY dealer_code,dt,customer_type
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.customer_type = t3.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+	GROUP BY dealer_code,dt,customer_type
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.customer_type = t4.customer_type
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.customer_type ASC
+;
+----------------------------------------------------------------
+-- 专属客户人群分类
+SELECT
+a1.dealer_code
+,a1.customer_type
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+    WHERE team=1
+	GROUP BY dealer_code,dt,customer_type
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,customer_type
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.customer_type = t1.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,customer_type
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.customer_type = t2.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,customer_type
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,customer_type
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.customer_type = a2.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,customer_type
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.customer_type = t3.customer_type
+LEFT JOIN
+(
+	SELECT dealer_code
+	,customer_type
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,customer_type
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.customer_type = t4.customer_type
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.customer_type ASC
+;
+----------------------------------------------------------------
+-- 一年基盘车龄
+SELECT
+a1.dealer_code
+,a1.vin_year
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+	GROUP BY dealer_code,dt,vin_year
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+	GROUP BY dealer_code,dt,vin_year
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.vin_year = t1.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+	GROUP BY dealer_code,dt,vin_year
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.vin_year = t2.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,vin_year
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,vin_year
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.vin_year = a2.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+	GROUP BY dealer_code,dt,vin_year
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.vin_year = t3.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+	GROUP BY dealer_code,dt,vin_year
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.vin_year = t4.vin_year
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.vin_year ASC
+;
+----------------------------------------------------------------
+-- 专属客户车龄
+SELECT
+a1.dealer_code
+,a1.vin_year
+,a1.dt
+,a1.a '进厂台次'
+,a1.b '售后产值'
+,a1.c '客单价'
+,a1.d '保养台次'
+,ROUND(t1.appointment_cnt / t2.maintain_cnt, 4) '保养预约率'
+,a2.a '专属客户接待率'
+,t3.a '上月流失客户数'
+,t4.a '上月濒临流失客户数'
+FROM
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,SUM(year_count) a
+	,SUM(total_fee) b
+	,SUM(total_fee)/SUM(year_count) c
+	,SUM(year_maintain_cnt) d
+	FROM `buick_manager_tag_his`
+    WHERE team=1
+	GROUP BY dealer_code,dt,vin_year
+) a1
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) appointment_cnt
+	FROM `buick_manager_tag_his`
+	WHERE appointment_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,vin_year
+) t1 -- 预约+保养人数
+ON a1.dealer_code = t1.dealer_code
+AND a1.dt = t1.dt
+AND a1.vin_year = t1.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) maintain_cnt
+	FROM `buick_manager_tag_his`
+	WHERE is_maintain = 1
+    AND team=1
+	GROUP BY dealer_code,dt,vin_year
+) t2 -- 保养人数
+ON a1.dealer_code = t2.dealer_code
+AND a1.dt = t2.dt
+AND a1.vin_year = t2.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,dt
+    ,vin_year
+	,round(SUM(exclusive_reception_times) / sum(pullin_cnt), 4) a
+	FROM `buick_manager_tag_his`
+	WHERE team = 1
+	GROUP BY dealer_code,dt,vin_year
+) a2 -- 专属客户接待率
+ON a1.dealer_code = a2.dealer_code
+AND a1.dt = a2.dt
+AND a1.vin_year = a2.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE card_pre_month_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,vin_year
+) t3 -- 上月流失
+ON a1.dealer_code = t3.dealer_code
+AND a1.dt = t3.dt
+AND a1.vin_year = t3.vin_year
+LEFT JOIN
+(
+	SELECT dealer_code
+	,vin_year
+    ,dt
+	,COUNT(*) a
+	FROM `buick_manager_tag_his`
+	WHERE border_11_lose = 1
+    AND team=1
+	GROUP BY dealer_code,dt,vin_year
+) t4 -- 濒临流失（11个月）
+ON a1.dealer_code = t4.dealer_code
+AND a1.dt = t4.dt
+AND a1.vin_year = t4.vin_year
+ORDER BY a1.dealer_code ASC
+,a1.dt ASC
+,a1.vin_year ASC
+;
